@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Unity Error Analyzer</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #111827;
+            color: #f9fafb;
+            margin: 0;
+            padding: 40px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: auto;
+        }
+
+        h1 {
+            margin-bottom: 8px;
+        }
+
+        p {
+            color: #d1d5db;
+        }
+
+        label {
+            display: block;
+            margin-top: 20px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 130px;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #374151;
+            background: #1f2937;
+            color: #f9fafb;
+            font-family: Consolas, monospace;
+            font-size: 14px;
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 18px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            background: #6b7280;
+            cursor: not-allowed;
+        }
+
+        pre {
+            white-space: pre-wrap;
+            background: #020617;
+            border: 1px solid #374151;
+            padding: 18px;
+            border-radius: 8px;
+            margin-top: 24px;
+            line-height: 1.5;
+        }
+
+        .small {
+            font-size: 14px;
+            color: #9ca3af;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Unity Error Analyzer</h1>
+
+        <p>
+            Paste a Unity console error and optional script snippet.
+            The tool will explain the likely cause and possible fix.
+        </p>
+
+        <label for="errorMessage">Unity Console Error</label>
+        <textarea 
+            id="errorMessage" 
+            placeholder="Example: NullReferenceException: Object reference not set to an instance of an object..."></textarea>
+
+        <label for="context">What were you doing when it happened?</label>
+        <textarea 
+            id="context" 
+            placeholder="Example: I clicked the Confirm button after selecting a wall object..."></textarea>
+
+        <label for="codeSnippet">Relevant C# Script Snippet</label>
+        <textarea 
+            id="codeSnippet" 
+            placeholder="Paste the method, class, or script section related to the error..."></textarea>
+
+        <button id="analyzeButton" onclick="analyzeError()">Analyze Error</button>
+
+        <p class="small">
+            Tip: Paste the exact console error and the method where the error happened.
+        </p>
+
+        <pre id="result">Analysis will appear here.</pre>
+    </div>
+
+    <script>
+        async function analyzeError() {
+            const button = document.getElementById("analyzeButton");
+            const result = document.getElementById("result");
+
+            const errorMessage = document.getElementById("errorMessage").value;
+            const context = document.getElementById("context").value;
+            const codeSnippet = document.getElementById("codeSnippet").value;
+
+            button.disabled = true;
+            button.textContent = "Analyzing...";
+            result.textContent = "Thinking...";
+
+            try {
+                const response = await fetch("/api/analyze", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        errorMessage,
+                        context,
+                        codeSnippet
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    result.textContent = data.error || "Something went wrong.";
+                    return;
+                }
+
+                result.textContent = data.analysis;
+            } catch (error) {
+                result.textContent = "Request failed: " + error.message;
+            } finally {
+                button.disabled = false;
+                button.textContent = "Analyze Error";
+            }
+        }
+    </script>
+</body>
+</html>
